@@ -15,6 +15,20 @@ services:
     # this creates a service per class whose id is the fully-qualified class name
     App\:
         resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Entity/'
+            - '../src/Kernel.php'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+    # Interface bindings
+    App\Application\Service\DiscountServiceInterface:
+        alias: App\Application\Service\DiscountService
+
+    App\Application\Service\ProductServiceInterface:
+        alias: App\Application\Service\ProductService
+
+    App\Domain\Repository\ProductRepositoryInterface:
+        alias: App\Infrastructure\Repository\ProductRepository

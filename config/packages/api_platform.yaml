@@ -19,12 +19,10 @@ api_platform:
     collection:
         pagination:
             enabled: true
-            client_enabled: true
-            client_items_per_page: true
-            items_per_page: 5
-            maximum_items_per_page: 20
-            page_parameter_name: page
+            enabled_parameter_name: pagination
             items_per_page_parameter_name: itemsPerPage
+            page_parameter_name: page
+            partial_parameter_name: partial
     
     # Exception handling
     exception_to_status:

@@ -1,0 +1,1 @@
+# Mytheresa-Promotion-API

@@ -1,7 +1,37 @@
 api_platform:
-    title: Hello API Platform
-    version: 1.0.0
-    defaults:
-        stateless: true
-        cache_headers:
-            vary: ['Content-Type', 'Authorization', 'Origin']
+    title: 'Mytheresa Promotions API'
+    version: '1.0.0'
+    description: 'REST API for product promotions and discounts'
+    
+    # API Documentation
+    swagger:
+        versions: [3]
+        api_keys:
+            apiKey:
+                name: Authorization
+                type: header
+    
+    # Default formats
+    formats:
+        json: ['application/json']
+    
+    # Pagination
+    collection:
+        pagination:
+            enabled: true
+            client_enabled: true
+            client_items_per_page: true
+            items_per_page: 5
+            maximum_items_per_page: 20
+            page_parameter_name: page
+            items_per_page_parameter_name: itemsPerPage
+    
+    # Exception handling
+    exception_to_status:
+        Symfony\Component\Serializer\Exception\ExceptionInterface: 400
+        ApiPlatform\Exception\InvalidArgumentException: 400
+        ApiPlatform\Exception\FilterValidationException: 400
+        Doctrine\ORM\OptimisticLockException: 409
+    
+    # Enable profiler in dev
+    enable_profiler: '%kernel.debug%'

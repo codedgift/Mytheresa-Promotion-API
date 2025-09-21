@@ -36,8 +36,8 @@ install: ## Install dependencies and setup application
 test: ## Reset DB and run tests
 	# Remove SQLite test database if it exists
 	docker-compose exec php rm -f var/cache/test/test.db || true
-	# Run migrations to recreate schema
-	docker-compose exec php php bin/console doctrine:migrations:migrate --no-interaction --env=test
+	# Create schema directly from entities
+	docker-compose exec php php bin/console doctrine:schema:create --env=test --no-interaction --quiet
 	# Run tests with APP_ENV=test
 	docker-compose exec -e APP_ENV=test php php bin/phpunit
 
@@ -48,4 +48,4 @@ seed: ## Seed database with sample products
 	docker-compose exec php php bin/console app:seed-products
 
 setup: build up install ## Complete setup (build, start, install dependencies)
-	@echo "Setup complete! Visit http://localhost:8080/api/doc for API documentation"
+	@echo "Setup complete! Visit http://localhost:8080/api/docs for API documentation"

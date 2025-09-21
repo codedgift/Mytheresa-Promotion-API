@@ -13,6 +13,7 @@
         "doctrine/orm": "^3.5",
         "nelmio/cors-bundle": "^2.5",
         "predis/predis": "^3.2",
+        "symfony/asset": "7.3.*",
         "symfony/cache": "7.3.*",
         "symfony/console": "7.3.*",
         "symfony/dotenv": "7.3.*",

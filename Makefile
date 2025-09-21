@@ -13,7 +13,7 @@ up: ## Start the application
 	docker-compose up -d
 	@echo "Application is starting..."
 	@echo "API will be available at: http://localhost:8080"
-	@echo "Swagger documentation: http://localhost:8080/api/doc"
+	@echo "Swagger documentation: http://localhost:8080/api/docs"
 
 down: ## Stop the application
 	docker-compose down

@@ -33,8 +33,13 @@ install: ## Install dependencies and setup application
 	docker-compose exec php php bin/console doctrine:migrations:migrate --no-interaction
 	docker-compose exec php php bin/console app:seed-products
 
-test: ## Run tests
-	docker-compose exec php php bin/phpunit
+test: ## Reset DB and run tests
+	# Remove SQLite test database if it exists
+	docker-compose exec php rm -f var/cache/test/test.db || true
+	# Run migrations to recreate schema
+	docker-compose exec php php bin/console doctrine:migrations:migrate --no-interaction --env=test
+	# Run tests with APP_ENV=test
+	docker-compose exec -e APP_ENV=test php php bin/phpunit
 
 migrate: ## Run database migrations
 	docker-compose exec php php bin/console doctrine:migrations:migrate --no-interaction

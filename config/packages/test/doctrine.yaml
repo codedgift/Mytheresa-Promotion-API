@@ -1,0 +1,7 @@
+doctrine:
+    dbal:
+        # Use SQLite for faster tests
+        url: 'sqlite:///%kernel.cache_dir%/test.db'
+        driver: 'pdo_sqlite'
+    orm:
+        auto_generate_proxy_classes: true

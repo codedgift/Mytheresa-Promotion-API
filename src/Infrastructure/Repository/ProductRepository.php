@@ -27,6 +27,7 @@ class ProductRepository extends ServiceEntityRepository implements ProductReposi
         $this->applyFilters($qb, $category, $priceLessThan);
 
         return $qb
+            ->orderBy('p.id', 'ASC')
             ->setMaxResults($limit)
             ->getQuery()
             ->getResult();
@@ -49,6 +50,7 @@ class ProductRepository extends ServiceEntityRepository implements ProductReposi
                ->setParameter('category', $category);
         }
 
+        // priceLessThan filter applies before discounts are applied
         if ($priceLessThan !== null) {
             $qb->andWhere('p.price <= :priceLessThan')
                ->setParameter('priceLessThan', $priceLessThan);

@@ -14,6 +14,8 @@ class DiscountService implements DiscountServiceInterface
     private const SKU_000003_DISCOUNT = 15;
     private const SPECIAL_SKU = '000003';
     private const BOOTS_CATEGORY = 'boots';
+    private const DEFAULT_CURRENCY = 'EUR';
+    private const DEFAULT_PERCENTAGE_VALUE = 100;
 
     public function applyDiscounts(Product $product): ProductResponseDTO
     {
@@ -31,7 +33,8 @@ class DiscountService implements DiscountServiceInterface
         $price = new Price(
             $originalPrice,
             $finalPrice,
-            $discountPercentageString
+            $discountPercentageString,
+            self::DEFAULT_CURRENCY
         );
 
         return new ProductResponseDTO(
@@ -56,13 +59,13 @@ class DiscountService implements DiscountServiceInterface
             $discounts[] = self::SKU_000003_DISCOUNT;
         }
 
-        // Return the highest discount (when multiple discounts collide)
+        // When multiple discounts collide, the bigger discount must be applied
         return empty($discounts) ? 0 : max($discounts);
     }
 
     private function calculateDiscountedPrice(int $originalPrice, int $discountPercentage): int
     {
-        $discountAmount = ($originalPrice * $discountPercentage) / 100;
+        $discountAmount = ($originalPrice * $discountPercentage) / self::DEFAULT_PERCENTAGE_VALUE;
         return (int) round($originalPrice - $discountAmount);
     }
 }

@@ -6,6 +6,8 @@ namespace App\Domain\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\OpenApi\Model\Operation;
+use ApiPlatform\OpenApi\Model\Parameter;
 use App\Controller\ProductController;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
@@ -20,7 +22,27 @@ use Symfony\Component\Validator\Constraints as Assert;
         new GetCollection(
             uriTemplate: '/products',
             controller: ProductController::class,
-            name: 'get_products_with_discounts'
+            name: 'get_products_with_discounts',
+            openapi: new Operation(
+                summary: 'Get products with discounts applied',
+                description: 'Returns a list of products with discounts applied. Can be filtered by category and price (before discounts).',
+                parameters: [
+                    new Parameter(
+                        name: 'category',
+                        in: 'query',
+                        description: 'Filter products by category (e.g., boots, sandals, sneakers)',
+                        required: false,
+                        schema: ['type' => 'string', 'example' => 'boots']
+                    ),
+                    new Parameter(
+                        name: 'priceLessThan',
+                        in: 'query',
+                        description: 'Filter products with price less than or equal to this value (before discounts applied)',
+                        required: false,
+                        schema: ['type' => 'integer', 'example' => 80000]
+                    )
+                ]
+            )
         )
     ],
     normalizationContext: ['groups' => ['product:read']],

@@ -36,7 +36,8 @@ class ProductService implements ProductServiceInterface
             return $cacheItem->get();
         }
 
-        $products = $this->productRepository->findWithFilters($category, $priceLessThan, $limit, $offset);
+        $paginator = $this->productRepository->createPaginator($category, $priceLessThan, $limit, $offset);
+        $products = iterator_to_array($paginator->getIterator());
         
         $productDTOs = array_map(
             fn($product) => $this->discountService->applyDiscounts($product),
@@ -52,7 +53,21 @@ class ProductService implements ProductServiceInterface
 
     public function getTotalCount(?string $category = null, ?int $priceLessThan = null): int
     {
-        return $this->productRepository->countWithFilters($category, $priceLessThan);
+        $cacheKey = $this->generateCountCacheKey($category, $priceLessThan);
+        $cacheItem = $this->cache->getItem($cacheKey);
+
+        if ($cacheItem->isHit()) {
+            return $cacheItem->get();
+        }
+
+        $paginator = $this->productRepository->createPaginator($category, $priceLessThan);
+        $count = $paginator->count();
+
+        $cacheItem->set($count);
+        $cacheItem->expiresAfter(self::CACHE_TTL);
+        $this->cache->save($cacheItem);
+
+        return $count;
     }
 
     private function generateCacheKey(?string $category, ?int $priceLessThan, int $limit, int $offset): string
@@ -62,6 +77,14 @@ class ProductService implements ProductServiceInterface
             'priceLessThan' => $priceLessThan,
             'limit' => $limit,
             'offset' => $offset
+        ]));
+    }
+
+    private function generateCountCacheKey(?string $category, ?int $priceLessThan): string
+    {
+        return self::CACHE_KEY_PREFIX . 'count_' . md5(serialize([
+            'category' => $category,
+            'priceLessThan' => $priceLessThan
         ]));
     }
 }

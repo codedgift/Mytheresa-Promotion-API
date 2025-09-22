@@ -7,6 +7,7 @@ namespace App\Infrastructure\Repository;
 use App\Domain\Entity\Product;
 use App\Domain\Repository\ProductRepositoryInterface;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Tools\Pagination\Paginator;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -22,26 +23,33 @@ class ProductRepository extends ServiceEntityRepository implements ProductReposi
 
     public function findWithFilters(?string $category = null, ?int $priceLessThan = null, int $limit = 5, int $offset = 0): array
     {
-        $qb = $this->createQueryBuilder('p');
-
-        $this->applyFilters($qb, $category, $priceLessThan);
-
-        return $qb
-            ->orderBy('p.id', 'ASC')
-            ->setFirstResult($offset)
-            ->setMaxResults($limit)
-            ->getQuery()
-            ->getResult();
+        $paginator = $this->createPaginator($category, $priceLessThan, $limit, $offset);
+        return iterator_to_array($paginator->getIterator());
     }
 
     public function countWithFilters(?string $category = null, ?int $priceLessThan = null): int
     {
-        $qb = $this->createQueryBuilder('p')
-            ->select('COUNT(p.id)');
+        $paginator = $this->createPaginator($category, $priceLessThan);
+        return $paginator->count();
+    }
 
+    public function createPaginator(?string $category = null, ?int $priceLessThan = null, ?int $limit = null, ?int $offset = null): Paginator
+    {
+        $qb = $this->createQueryBuilder('p');
+        
         $this->applyFilters($qb, $category, $priceLessThan);
+        
+        $qb->orderBy('p.id', 'ASC');
+        
+        if ($limit !== null) {
+            $qb->setMaxResults($limit);
+        }
+        
+        if ($offset !== null) {
+            $qb->setFirstResult($offset);
+        }
 
-        return (int) $qb->getQuery()->getSingleScalarResult();
+        return new Paginator($qb->getQuery(), true);
     }
 
     private function applyFilters(QueryBuilder $qb, ?string $category, ?int $priceLessThan): void

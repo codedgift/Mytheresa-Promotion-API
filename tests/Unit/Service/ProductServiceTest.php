@@ -10,6 +10,7 @@ use App\Application\Service\DiscountServiceInterface;
 use App\Application\Service\ProductService;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\MockObject\MockObject;
+use Doctrine\ORM\Tools\Pagination\Paginator;
 use Psr\Cache\CacheItemInterface;
 use Psr\Cache\CacheItemPoolInterface;
 
@@ -62,6 +63,11 @@ class ProductServiceTest extends TestCase
                ->setCategory('boots')
                ->setPrice(89000);
 
+        $paginator = $this->createMock(Paginator::class);
+        $paginator->expects($this->once())
+                  ->method('getIterator')
+                  ->willReturn(new \ArrayIterator([$product]));
+
         $cacheItem = $this->createMock(CacheItemInterface::class);
         $cacheItem->expects($this->once())
                   ->method('isHit')
@@ -72,9 +78,9 @@ class ProductServiceTest extends TestCase
                    ->willReturn($cacheItem);
 
         $this->productRepository->expects($this->once())
-                               ->method('findWithFilters')
+                               ->method('createPaginator')
                                ->with(null, null, 5, 0)
-                               ->willReturn([$product]);
+                               ->willReturn($paginator);
 
         $this->discountService->expects($this->once())
                              ->method('applyDiscounts')
@@ -97,10 +103,35 @@ class ProductServiceTest extends TestCase
     {
         $expectedCount = 10;
 
+        $paginator = $this->createMock(Paginator::class);
+        $paginator->expects($this->once())
+                  ->method('count')
+                  ->willReturn($expectedCount);
+
+        $cacheItem = $this->createMock(CacheItemInterface::class);
+        $cacheItem->expects($this->once())
+                  ->method('isHit')
+                  ->willReturn(false);
+
+        $this->cache->expects($this->once())
+                   ->method('getItem')
+                   ->willReturn($cacheItem);
+
         $this->productRepository->expects($this->once())
-                               ->method('countWithFilters')
+                               ->method('createPaginator')
                                ->with('boots', 50000)
-                               ->willReturn($expectedCount);
+                               ->willReturn($paginator);
+
+        $cacheItem->expects($this->once())
+                  ->method('set')
+                  ->with($expectedCount);
+        $cacheItem->expects($this->once())
+                  ->method('expiresAfter')
+                  ->with(300);
+
+        $this->cache->expects($this->once())
+                   ->method('save')
+                   ->with($cacheItem);
 
         $result = $this->productService->getTotalCount('boots', 50000);
 

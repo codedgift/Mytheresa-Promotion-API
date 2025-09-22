@@ -73,7 +73,7 @@ class ProductServiceTest extends TestCase
 
         $this->productRepository->expects($this->once())
                                ->method('findWithFilters')
-                               ->with(null, null, 5)
+                               ->with(null, null, 5, 0)
                                ->willReturn([$product]);
 
         $this->discountService->expects($this->once())

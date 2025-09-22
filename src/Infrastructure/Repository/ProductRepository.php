@@ -20,7 +20,7 @@ class ProductRepository extends ServiceEntityRepository implements ProductReposi
         parent::__construct($registry, Product::class);
     }
 
-    public function findWithFilters(?string $category = null, ?int $priceLessThan = null, int $limit = 5): array
+    public function findWithFilters(?string $category = null, ?int $priceLessThan = null, int $limit = 5, int $offset = 0): array
     {
         $qb = $this->createQueryBuilder('p');
 
@@ -28,6 +28,7 @@ class ProductRepository extends ServiceEntityRepository implements ProductReposi
 
         return $qb
             ->orderBy('p.id', 'ASC')
+            ->setFirstResult($offset)
             ->setMaxResults($limit)
             ->getQuery()
             ->getResult();

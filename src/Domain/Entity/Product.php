@@ -61,25 +61,25 @@ class Product
     #[Assert\NotBlank]
     #[Assert\Length(max: 20)]
     #[Groups(['product:read'])]
-    private string $sku;
+    private string $sku = '';
 
     #[ORM\Column(type: 'string', length: 255)]
     #[Assert\NotBlank]
     #[Assert\Length(max: 255)]
     #[Groups(['product:read'])]
-    private string $name;
+    private string $name = '';
 
     #[ORM\Column(type: 'string', length: 100)]
     #[Assert\NotBlank]
     #[Assert\Length(max: 100)]
     #[Groups(['product:read'])]
-    private string $category;
+    private string $category = '';
 
     #[ORM\Column(type: 'integer')]
     #[Assert\NotBlank]
     #[Assert\GreaterThan(0)]
     #[Groups(['product:read'])]
-    private int $price;
+    private int $price = 0;
 
     #[ORM\Column(type: 'datetime_immutable')]
     private \DateTimeImmutable $createdAt;

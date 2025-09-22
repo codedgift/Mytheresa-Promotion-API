@@ -4,49 +4,45 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Application\Service\ProductServiceInterface;
+use App\Application\UseCase\GetProductsUseCase;
+use App\Application\DTO\GetProductsRequest;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class ProductController extends AbstractController
 {
     public function __construct(
-        private readonly ProductServiceInterface $productService,
-        private readonly SerializerInterface $serializer
+        private readonly GetProductsUseCase $getProductsUseCase,
+        private readonly ValidatorInterface $validator
     ) {
     }
 
     public function __invoke(Request $request): JsonResponse
     {
-        $category = $request->query->get('category');
-        $priceLessThan = $request->query->get('priceLessThan');
-        $limit = min((int) $request->query->get('itemsPerPage', 5), 20);
+        // Create and validate request DTO
+        $getProductsRequest = new GetProductsRequest(
+            $request->query->get('category'),
+            $request->query->get('priceLessThan'),
+            (int) $request->query->get('page', 1),
+            min((int) $request->query->get('itemsPerPage', 5), 20)
+        );
 
-        // Validate priceLessThan parameter
-        if ($priceLessThan !== null) {
-            $priceLessThan = filter_var($priceLessThan, FILTER_VALIDATE_INT);
-            if ($priceLessThan === false || $priceLessThan < 0) {
-                return new JsonResponse([
-                    'error' => 'Invalid priceLessThan parameter. Must be a positive integer.'
-                ], Response::HTTP_BAD_REQUEST);
+        $violations = $this->validator->validate($getProductsRequest);
+        if (count($violations) > 0) {
+            $errors = [];
+            foreach ($violations as $violation) {
+                $errors[$violation->getPropertyPath()] = $violation->getMessage();
             }
+            return new JsonResponse(['errors' => $errors], Response::HTTP_BAD_REQUEST);
         }
 
         try {
-            $products = $this->productService->getProductsWithDiscounts(
-                $category,
-                $priceLessThan,
-                $limit
-            );
+            $response = $this->getProductsUseCase->execute($getProductsRequest);
 
-            $jsonData = $this->serializer->serialize($products, 'json', [
-                'groups' => ['product:read']
-            ]);
-
-            return new JsonResponse($jsonData, Response::HTTP_OK, [], true);
+            return new JsonResponse($response->toArray(), Response::HTTP_OK);
         } catch (\Exception $e) {
             return new JsonResponse([
                 'error' => 'An error occurred while fetching products.',

@@ -11,7 +11,7 @@ interface ProductRepositoryInterface
     /**
      * @return Product[]
      */
-    public function findWithFilters(?string $category = null, ?int $priceLessThan = null, int $limit = 5): array;
+    public function findWithFilters(?string $category = null, ?int $priceLessThan = null, int $limit = 5, int $offset = 0): array;
 
     public function countWithFilters(?string $category = null, ?int $priceLessThan = null): int;
 

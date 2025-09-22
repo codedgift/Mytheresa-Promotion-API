@@ -19,6 +19,8 @@ class ProductControllerTest extends WebTestCase
 
         $content = json_decode($client->getResponse()->getContent(), true);
         $this->assertIsArray($content);
+        $this->assertArrayHasKey('data', $content);
+        $this->assertArrayHasKey('pagination', $content);
     }
 
     public function testGetProductsWithCategoryFilter(): void
@@ -29,10 +31,11 @@ class ProductControllerTest extends WebTestCase
         $this->assertResponseIsSuccessful();
         
         $content = json_decode($client->getResponse()->getContent(), true);
-        $this->assertIsArray($content);
+        $this->assertArrayHasKey('data', $content);
+        $products = $content['data'];
         
         // Verify all returned products are in boots category
-        foreach ($content as $product) {
+        foreach ($products as $product) {
             $this->assertEquals('boots', $product['category']);
             // Verify boots have 30% discount applied
             $this->assertEquals('30%', $product['price']['discount_percentage']);
@@ -48,10 +51,11 @@ class ProductControllerTest extends WebTestCase
         $this->assertResponseIsSuccessful();
         
         $content = json_decode($client->getResponse()->getContent(), true);
-        $this->assertIsArray($content);
+        $this->assertArrayHasKey('data', $content);
+        $products = $content['data'];
         
         // Verify all returned products have original price <= 80000 (before discounts)
-        foreach ($content as $product) {
+        foreach ($products as $product) {
             $this->assertLessThanOrEqual(80000, $product['price']['original']);
         }
     }
@@ -64,10 +68,11 @@ class ProductControllerTest extends WebTestCase
         $this->assertResponseIsSuccessful();
         
         $content = json_decode($client->getResponse()->getContent(), true);
+        $products = $content['data'];
         
         // Find product with SKU 000003 (should have both boots 30% and SKU 15% discounts)
         $product000003 = null;
-        foreach ($content as $product) {
+        foreach ($products as $product) {
             if ($product['sku'] === '000003') {
                 $product000003 = $product;
                 break;
@@ -90,8 +95,8 @@ class ProductControllerTest extends WebTestCase
         $this->assertResponseIsSuccessful();
         
         $content = json_decode($client->getResponse()->getContent(), true);
-        $this->assertIsArray($content);
-        $this->assertLessThanOrEqual(5, count($content));
+        $this->assertArrayHasKey('data', $content);
+        $this->assertLessThanOrEqual(5, count($content['data']));
     }
 
     public function testGetProductsWithInvalidPriceLessThan(): void
@@ -102,7 +107,7 @@ class ProductControllerTest extends WebTestCase
         $this->assertResponseStatusCodeSame(Response::HTTP_BAD_REQUEST);
         
         $content = json_decode($client->getResponse()->getContent(), true);
-        $this->assertArrayHasKey('error', $content);
+        $this->assertArrayHasKey('errors', $content);
     }
 
     public function testProductResponseStructure(): void
@@ -113,9 +118,11 @@ class ProductControllerTest extends WebTestCase
         $this->assertResponseIsSuccessful();
         
         $content = json_decode($client->getResponse()->getContent(), true);
+        $this->assertArrayHasKey('data', $content);
+        $this->assertArrayHasKey('pagination', $content);
         
-        if (!empty($content)) {
-            $product = $content[0];
+        if (!empty($content['data'])) {
+            $product = $content['data'][0];
             
             $this->assertArrayHasKey('sku', $product);
             $this->assertArrayHasKey('name', $product);
@@ -129,5 +136,26 @@ class ProductControllerTest extends WebTestCase
             $this->assertArrayHasKey('currency', $price);
             $this->assertEquals('EUR', $price['currency']);
         }
+    }
+
+    public function testPaginationStructure(): void
+    {
+        $client = static::createClient();
+        $client->request('GET', '/api/products?page=1&itemsPerPage=2');
+
+        $this->assertResponseIsSuccessful();
+        
+        $content = json_decode($client->getResponse()->getContent(), true);
+        
+        $this->assertArrayHasKey('pagination', $content);
+        $pagination = $content['pagination'];
+        
+        $this->assertArrayHasKey('current_page', $pagination);
+        $this->assertArrayHasKey('items_per_page', $pagination);
+        $this->assertArrayHasKey('total_items', $pagination);
+        $this->assertArrayHasKey('total_pages', $pagination);
+        
+        $this->assertEquals(1, $pagination['current_page']);
+        $this->assertEquals(2, $pagination['items_per_page']);
     }
 }

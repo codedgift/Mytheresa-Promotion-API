@@ -14,7 +14,8 @@ interface ProductServiceInterface
     public function getProductsWithDiscounts(
         ?string $category = null,
         ?int $priceLessThan = null,
-        int $limit = 5
+        int $limit = 5,
+        int $offset = 0
     ): array;
 
     public function getTotalCount(?string $category = null, ?int $priceLessThan = null): int;

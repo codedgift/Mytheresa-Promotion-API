@@ -26,16 +26,17 @@ class ProductService implements ProductServiceInterface
     public function getProductsWithDiscounts(
         ?string $category = null,
         ?int $priceLessThan = null,
-        int $limit = 5
+        int $limit = 5,
+        int $offset = 0
     ): array {
-        $cacheKey = $this->generateCacheKey($category, $priceLessThan, $limit);
+        $cacheKey = $this->generateCacheKey($category, $priceLessThan, $limit, $offset);
         $cacheItem = $this->cache->getItem($cacheKey);
 
         if ($cacheItem->isHit()) {
             return $cacheItem->get();
         }
 
-        $products = $this->productRepository->findWithFilters($category, $priceLessThan, $limit);
+        $products = $this->productRepository->findWithFilters($category, $priceLessThan, $limit, $offset);
         
         $productDTOs = array_map(
             fn($product) => $this->discountService->applyDiscounts($product),
@@ -54,12 +55,13 @@ class ProductService implements ProductServiceInterface
         return $this->productRepository->countWithFilters($category, $priceLessThan);
     }
 
-    private function generateCacheKey(?string $category, ?int $priceLessThan, int $limit): string
+    private function generateCacheKey(?string $category, ?int $priceLessThan, int $limit, int $offset): string
     {
         return self::CACHE_KEY_PREFIX . md5(serialize([
             'category' => $category,
             'priceLessThan' => $priceLessThan,
-            'limit' => $limit
+            'limit' => $limit,
+            'offset' => $offset
         ]));
     }
 }
